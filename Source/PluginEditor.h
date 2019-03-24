@@ -6,12 +6,12 @@
 //==============================================================================
 /**
 */
-class GainTutorialAudioProcessorEditor  : public AudioProcessorEditor,
+class SineDistAudioProcessorEditor  : public AudioProcessorEditor,
 										  public Slider::Listener
 {
 public:
-    GainTutorialAudioProcessorEditor (GainTutorialAudioProcessor&);
-    ~GainTutorialAudioProcessorEditor();
+    SineDistAudioProcessorEditor (SineDistAudioProcessor&);
+    ~SineDistAudioProcessorEditor();
 
     //==============================================================================
     void paint (Graphics&) override;
@@ -21,12 +21,15 @@ public:
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
-    GainTutorialAudioProcessor& processor;
+    SineDistAudioProcessor& processor;
 
 	Slider gainSlider;
 	Slider dryWetSlider;
 
-	OwnedArray<AudioProcessorValueTreeState::SliderAttachment> attachments;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GainTutorialAudioProcessorEditor)
+public:
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> gainAttach;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> wetAttach;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SineDistAudioProcessorEditor)
 };

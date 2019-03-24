@@ -2,7 +2,7 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-GainTutorialAudioProcessor::GainTutorialAudioProcessor()
+SineDistAudioProcessor::SineDistAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor (BusesProperties()
                      #if ! JucePlugin_IsMidiEffect
@@ -12,31 +12,40 @@ GainTutorialAudioProcessor::GainTutorialAudioProcessor()
                        .withOutput ("Output", AudioChannelSet::stereo(), true)
                      #endif
                        ),
-					//gain(25.f),
-					//dryWet(-45.f),
-					treeState(*this, nullptr)
+	treeState (*this, nullptr, "PARAMETERS", createParameterLayout())
 
 #endif
 {
-	//========================== stateTree 
-	NormalisableRange<float> gainRange(0.0f, 50.0f);
-	treeState.createAndAddParameter(GAIN_ID, GAIN_NAME, GAIN_NAME, gainRange, gain, nullptr, nullptr, false, true, false, AudioProcessorParameter::genericParameter);
-	
-	NormalisableRange<float> wetDryRange(-90.0f, 0.0f);
-	treeState.createAndAddParameter(WETDRY_ID, WETDRY_NAME, WETDRY_NAME, wetDryRange, dryWet, nullptr, nullptr, false, true, false, AudioProcessorParameter::genericParameter);
 }
 
-GainTutorialAudioProcessor::~GainTutorialAudioProcessor()
+SineDistAudioProcessor::~SineDistAudioProcessor()
 {
 }
 
 //==============================================================================
-const String GainTutorialAudioProcessor::getName() const
+
+AudioProcessorValueTreeState::ParameterLayout SineDistAudioProcessor::createParameterLayout() 
+{
+	
+	std::vector<std::unique_ptr<RangedAudioParameter>> params;
+
+	auto gainParam = std::make_unique<AudioParameterFloat>(GAIN_ID, GAIN_NAME, 0.0f, 50.0f, 25.0f);
+	auto wetdryParam = std::make_unique<AudioParameterFloat>(WETDRY_ID, WETDRY_NAME, -90.0f, 0.0f, 25.0f);
+
+	params.push_back(std::move(gainParam));
+	params.push_back(std::move(wetdryParam));
+
+	return { params.begin(), params.end() };
+
+}
+
+
+const String SineDistAudioProcessor::getName() const
 {
     return JucePlugin_Name;
 }
 
-bool GainTutorialAudioProcessor::acceptsMidi() const
+bool SineDistAudioProcessor::acceptsMidi() const
 {
    #if JucePlugin_WantsMidiInput
     return true;
@@ -45,7 +54,7 @@ bool GainTutorialAudioProcessor::acceptsMidi() const
    #endif
 }
 
-bool GainTutorialAudioProcessor::producesMidi() const
+bool SineDistAudioProcessor::producesMidi() const
 {
    #if JucePlugin_ProducesMidiOutput
     return true;
@@ -54,7 +63,7 @@ bool GainTutorialAudioProcessor::producesMidi() const
    #endif
 }
 
-bool GainTutorialAudioProcessor::isMidiEffect() const
+bool SineDistAudioProcessor::isMidiEffect() const
 {
    #if JucePlugin_IsMidiEffect
     return true;
@@ -63,51 +72,51 @@ bool GainTutorialAudioProcessor::isMidiEffect() const
    #endif
 }
 
-double GainTutorialAudioProcessor::getTailLengthSeconds() const
+double SineDistAudioProcessor::getTailLengthSeconds() const
 {
     return 0.0;
 }
 
-int GainTutorialAudioProcessor::getNumPrograms()
+int SineDistAudioProcessor::getNumPrograms()
 {
     return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
                 // so this should be at least 1, even if you're not really implementing programs.
 }
 
-int GainTutorialAudioProcessor::getCurrentProgram()
+int SineDistAudioProcessor::getCurrentProgram()
 {
     return 0;
 }
 
-void GainTutorialAudioProcessor::setCurrentProgram (int index)
+void SineDistAudioProcessor::setCurrentProgram (int index)
 {
 }
 
-const String GainTutorialAudioProcessor::getProgramName (int index)
+const String SineDistAudioProcessor::getProgramName (int index)
 {
     return {};
 }
 
-void GainTutorialAudioProcessor::changeProgramName (int index, const String& newName)
+void SineDistAudioProcessor::changeProgramName (int index, const String& newName)
 {
 }
 
 //==============================================================================
-void GainTutorialAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void SineDistAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
 	//init values using dereferenced raw parameter values.
-	gain = *treeState.getRawParameterValue(GAIN_ID); //kanske fel v‰rde. decibel:: 
+	gain = *treeState.getRawParameterValue(GAIN_ID); //kanske fel v√§rde. decibel:: 
 	dryWet = *treeState.getRawParameterValue(WETDRY_ID);
 }
 
-void GainTutorialAudioProcessor::releaseResources()
+void SineDistAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool GainTutorialAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool SineDistAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
   #if JucePlugin_IsMidiEffect
     ignoreUnused (layouts);
@@ -130,7 +139,7 @@ bool GainTutorialAudioProcessor::isBusesLayoutSupported (const BusesLayout& layo
 }
 #endif
 
-void GainTutorialAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
+void SineDistAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
     ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
@@ -170,25 +179,25 @@ void GainTutorialAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiB
 }
 
 //==============================================================================
-bool GainTutorialAudioProcessor::hasEditor() const
+bool SineDistAudioProcessor::hasEditor() const
 {
     return true; // (change this to false if you choose to not supply an editor)
 }
 
-AudioProcessorEditor* GainTutorialAudioProcessor::createEditor()
+AudioProcessorEditor* SineDistAudioProcessor::createEditor()
 {
-    return new GainTutorialAudioProcessorEditor (*this);
+    return new SineDistAudioProcessorEditor (*this);
 }
 
 //==============================================================================
-void GainTutorialAudioProcessor::getStateInformation (MemoryBlock& destData)
+void SineDistAudioProcessor::getStateInformation (MemoryBlock& destData)
 {
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
 }
 
-void GainTutorialAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+void SineDistAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
@@ -198,5 +207,5 @@ void GainTutorialAudioProcessor::setStateInformation (const void* data, int size
 // This creates new instances of the plugin..
 AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new GainTutorialAudioProcessor();
+    return new SineDistAudioProcessor();
 }

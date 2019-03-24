@@ -2,42 +2,40 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-GainTutorialAudioProcessorEditor::GainTutorialAudioProcessorEditor (GainTutorialAudioProcessor& p)
+SineDistAudioProcessorEditor::SineDistAudioProcessorEditor (SineDistAudioProcessor& p)
     : AudioProcessorEditor (&p), processor (p)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize (250, 250);
-
-	attachments.add(new AudioProcessorValueTreeState::SliderAttachment(processor.treeState, GAIN_ID, gainSlider));
+    setSize (500, 500);
+	
+	gainAttach = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(processor.treeState, GAIN_ID, gainSlider);
 	gainSlider.setSliderStyle(Slider::SliderStyle::Rotary);
 	gainSlider.setTextBoxStyle(Slider::TextBoxBelow, true, 100, 25);
 	gainSlider.setRange(0.0, 50.0);
-	gainSlider.setValue(25.f);
 	gainSlider.addListener(this);
 	addAndMakeVisible(gainSlider);
 
-	attachments.add(new AudioProcessorValueTreeState::SliderAttachment(processor.treeState, WETDRY_ID, dryWetSlider));
+	wetAttach = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(processor.treeState, WETDRY_ID, dryWetSlider);
 	dryWetSlider.setSliderStyle(Slider::SliderStyle::Rotary);
 	dryWetSlider.setTextBoxStyle(Slider::TextBoxBelow, true, 100, 25);
 	dryWetSlider.setRange(-90, 0);
-	dryWetSlider.setValue(-45.f);
 	dryWetSlider.addListener(this);
 	addAndMakeVisible(dryWetSlider);
 
 }
 
-GainTutorialAudioProcessorEditor::~GainTutorialAudioProcessorEditor()
+SineDistAudioProcessorEditor::~SineDistAudioProcessorEditor()
 {	
 }
 
 //==============================================================================
-void GainTutorialAudioProcessorEditor::paint (Graphics& g)
+void SineDistAudioProcessorEditor::paint (Graphics& g)
 {
 	g.fillAll(getLookAndFeel().findColour(ResizableWindow::backgroundColourId));
 }
 
-void GainTutorialAudioProcessorEditor::resized()
+void SineDistAudioProcessorEditor::resized()
 {
 	Rectangle<int> area = getLocalBounds();
 	area.reduce(15, 15);
@@ -46,7 +44,7 @@ void GainTutorialAudioProcessorEditor::resized()
 	dryWetSlider.setBounds(area);
 }
 
-void GainTutorialAudioProcessorEditor::sliderValueChanged(Slider *slider)
+void SineDistAudioProcessorEditor::sliderValueChanged(Slider *slider)
 {
 	if (slider == &gainSlider)
 	{

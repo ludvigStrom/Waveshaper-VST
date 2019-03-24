@@ -12,12 +12,12 @@
 //==============================================================================
 /**
 */
-class GainTutorialAudioProcessor  : public AudioProcessor
+class SineDistAudioProcessor  : public AudioProcessor
 {
 public:
     //==============================================================================
-    GainTutorialAudioProcessor();
-    ~GainTutorialAudioProcessor();
+    SineDistAudioProcessor();
+    ~SineDistAudioProcessor();
 
     //==============================================================================
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
@@ -57,6 +57,7 @@ public:
 
 	//=====================================================
 	AudioProcessorValueTreeState treeState;
+	AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
 private:
 	double gain;
@@ -65,5 +66,5 @@ private:
 	double orgSound;
 
     //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GainTutorialAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SineDistAudioProcessor)
 };
