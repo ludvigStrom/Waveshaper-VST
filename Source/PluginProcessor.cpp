@@ -14,8 +14,10 @@ SineDistAudioProcessor::SineDistAudioProcessor()
                        ),
 	treeState (*this, nullptr, "PARAMETERS", createParameterLayout())
 
+
 #endif
 {
+	treeState.state = ValueTree("SavedParams");
 }
 
 SineDistAudioProcessor::~SineDistAudioProcessor()
@@ -195,17 +197,30 @@ void SineDistAudioProcessor::getStateInformation (MemoryBlock& destData)
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
+
+	ScopedPointer <XmlElement> xml(treeState.state.createXml());
+	copyXmlToBinary(*xml, destData);
+
 }
 
 void SineDistAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+	ScopedPointer <XmlElement> theParams(getXmlFromBinary(data, sizeInBytes));
+
+	if (theParams != nullptr) {
+		if (theParams->hasTagName(treeState.state.getType())) {
+			treeState.state = ValueTree::fromXml(*theParams);
+		}
+	}
+
 }
 
 //==============================================================================
 // This creates new instances of the plugin..
 AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new SineDistAudioProcessor();
+    //return new SineDistAudioProcessor(AudioProcessorValueTreeState);
+	return new SineDistAudioProcessor();
 }
