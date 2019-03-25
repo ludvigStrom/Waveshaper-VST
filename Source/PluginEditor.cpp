@@ -5,9 +5,8 @@
 SineDistAudioProcessorEditor::SineDistAudioProcessorEditor (SineDistAudioProcessor& p)
     : AudioProcessorEditor (&p), processor (p)
 {
-    // Make sure that before the constructor has finished, you've set the
-    // editor's size to whatever you need it to be.
-    setSize (500, 500);
+
+	setSize (250, 250);
 	
 	gainAttach = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(processor.treeState, GAIN_ID, gainSlider);
 	gainSlider.setSliderStyle(Slider::SliderStyle::Rotary);
@@ -19,7 +18,7 @@ SineDistAudioProcessorEditor::SineDistAudioProcessorEditor (SineDistAudioProcess
 	wetAttach = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(processor.treeState, WETDRY_ID, dryWetSlider);
 	dryWetSlider.setSliderStyle(Slider::SliderStyle::Rotary);
 	dryWetSlider.setTextBoxStyle(Slider::TextBoxBelow, true, 100, 25);
-	dryWetSlider.setRange(-90, 0);
+	dryWetSlider.setRange(0, 1);
 	dryWetSlider.addListener(this);
 	addAndMakeVisible(dryWetSlider);
 

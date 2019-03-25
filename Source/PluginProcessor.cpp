@@ -2,22 +2,19 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-SineDistAudioProcessor::SineDistAudioProcessor()
+SineDistAudioProcessor::SineDistAudioProcessor() :
 #ifndef JucePlugin_PreferredChannelConfigurations
-     : AudioProcessor (BusesProperties()
-                     #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  AudioChannelSet::stereo(), true)
-                      #endif
-                       .withOutput ("Output", AudioChannelSet::stereo(), true)
-                     #endif
-                       ),
-	treeState (*this, nullptr, "PARAMETERS", createParameterLayout())
-
-
+	AudioProcessor(BusesProperties()
+#if ! JucePlugin_IsMidiEffect
+#if ! JucePlugin_IsSynth
+		.withInput("Input", AudioChannelSet::stereo(), true)
 #endif
+		.withOutput("Output", AudioChannelSet::stereo(), true)
+#endif
+	),
+#endif
+	treeState(*this, nullptr, "PARAMETERS", createParameterLayout())
 {
-	treeState.state = ValueTree("SavedParams");
 }
 
 SineDistAudioProcessor::~SineDistAudioProcessor()
@@ -32,7 +29,7 @@ AudioProcessorValueTreeState::ParameterLayout SineDistAudioProcessor::createPara
 	std::vector<std::unique_ptr<RangedAudioParameter>> params;
 
 	auto gainParam = std::make_unique<AudioParameterFloat>(GAIN_ID, GAIN_NAME, 0.0f, 50.0f, 25.0f);
-	auto wetdryParam = std::make_unique<AudioParameterFloat>(WETDRY_ID, WETDRY_NAME, -90.0f, 0.0f, 25.0f);
+	auto wetdryParam = std::make_unique<AudioParameterFloat>(WETDRY_ID, WETDRY_NAME, 0.0f, 1.0f, 0.5f);
 
 	params.push_back(std::move(gainParam));
 	params.push_back(std::move(wetdryParam));
@@ -107,7 +104,7 @@ void SineDistAudioProcessor::changeProgramName (int index, const String& newName
 void SineDistAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
 	//init values using dereferenced raw parameter values.
-	gain = *treeState.getRawParameterValue(GAIN_ID); //kanske fel värde. decibel:: 
+	gain = *treeState.getRawParameterValue(GAIN_ID);
 	dryWet = *treeState.getRawParameterValue(WETDRY_ID);
 }
 
@@ -157,8 +154,8 @@ void SineDistAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffe
 		for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
 		{
 			//read input from knobs. 
-			gain = knobGain.getNextValue();
-			dryWet = knobDryWet.getNextValue();
+			auto gains = *treeState.getRawParameterValue(GAIN_ID);
+			auto dryWets = *treeState.getRawParameterValue(WETDRY_ID);
 
 			//assign current sample to tmpSound;
 			tmpSound = buffer.getSample(channel, sample);
@@ -167,13 +164,13 @@ void SineDistAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffe
 			orgSound = tmpSound;
 
 			//sinus waveshaper
-			tmpSound = std::sin(tmpSound * gain);
+			tmpSound = std::sin(tmpSound * gains);
 
 			//hardClip
 			tmpSound = std::tanh(tmpSound);
 
 			//dry/wet
-			tmpSound = ((tmpSound * dryWet) + (orgSound * (1.f - dryWet)) / 2.f);
+			tmpSound = ((tmpSound * dryWets) + (orgSound * (1.f - dryWets)) / 2.f);
 
 			channelData[sample] = tmpSound ;
 		}
