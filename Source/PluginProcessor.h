@@ -35,9 +35,6 @@ public:
 	void getStateInformation(MemoryBlock& destData) override;
 	void setStateInformation(const void* data, int sizeInBytes) override;
 
-	LinearSmoothedValue<float> knobGain;
-	LinearSmoothedValue<float> knobDryWet;
-
 	AudioProcessorValueTreeState apvts;
 	AudioProcessorValueTreeState::ParameterLayout createParameters();
 
