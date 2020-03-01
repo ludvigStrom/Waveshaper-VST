@@ -14,9 +14,12 @@ public:
 private:
 	Slider gainSlider;
 	Slider wetDrySlider;
+    Slider outputVolumeSlider;
 
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> gainSliderAttachment;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> wetDrySliderAttachment;
+    std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment>
+        outputVolumeSliderAttachement;
 
 	SineDistortionAudioProcessor& processor;
 

@@ -27,6 +27,16 @@ SineDistortionAudioProcessorEditor::SineDistortionAudioProcessorEditor(SineDisto
 	wetDrySliderAttachment =
 		std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(
 			processor.apvts, "WETDRY_SLIDER", wetDrySlider);
+        
+    outputVolumeSlider.setSliderStyle(Slider::SliderStyle::Rotary);
+    outputVolumeSlider.setTextBoxStyle(Slider::TextBoxBelow, true, 100, 25);
+    outputVolumeSlider.setRange(-60.0f, 0.0f, 0.1);
+    outputVolumeSlider.setValue(0.0f);
+    addAndMakeVisible(outputVolumeSlider);
+
+    outputVolumeSliderAttachement =
+        std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(
+            processor.apvts, "OUTPUT_VOLUME_SLIDER", outputVolumeSlider);
 }
 
 SineDistortionAudioProcessorEditor::~SineDistortionAudioProcessorEditor() {
@@ -41,6 +51,7 @@ void SineDistortionAudioProcessorEditor::resized() {
 	Rectangle<int> area = getLocalBounds();
 	area.reduce(15, 15);
 
-	gainSlider.setBounds(area.removeFromLeft(area.getWidth() / 2));
-	wetDrySlider.setBounds(area);
+	gainSlider.setBounds(area.removeFromLeft(area.getWidth() / 3));
+	wetDrySlider.setBounds(area.removeFromLeft(area.getWidth() / 2));
+    outputVolumeSlider.setBounds(area);
 }

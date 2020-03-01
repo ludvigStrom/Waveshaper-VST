@@ -73,6 +73,7 @@ void SineDistortionAudioProcessor::changeProgramName(int index, const String& ne
 void SineDistortionAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
 	gain = *apvts.getRawParameterValue("GAIN_SLIDER");
 	dryWet = *apvts.getRawParameterValue("WETDRY_SLIDER");
+    outputVolume = *apvts.getRawParameterValue("OUTPUT_VOLUME_SLIDER");
 }
 
 void SineDistortionAudioProcessor::releaseResources() {
@@ -104,8 +105,9 @@ void SineDistortionAudioProcessor::processBlock(AudioBuffer<float>& buffer, Midi
 	auto totalNumInputChannels = getTotalNumInputChannels();
 	auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-	auto gains = *apvts.getRawParameterValue("GAIN_SLIDER");
-	auto dryWets = *apvts.getRawParameterValue("WETDRY_SLIDER");
+	float gains = *apvts.getRawParameterValue("GAIN_SLIDER");
+	float dryWets = *apvts.getRawParameterValue("WETDRY_SLIDER");
+    float outputVolume = *apvts.getRawParameterValue("OUTPUT_VOLUME_SLIDER");
 
 	for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
 		buffer.clear(i, 0, buffer.getNumSamples());
@@ -130,7 +132,8 @@ void SineDistortionAudioProcessor::processBlock(AudioBuffer<float>& buffer, Midi
 			//dry/wet
 			temporarySound = ((temporarySound * dryWets) + (originalSound * (1.f - dryWets)) / 2.f);
 
-			channelData[sample] = temporarySound;
+            //Apply output volume
+			channelData[sample] = temporarySound * Decibels::decibelsToGain(outputVolume);
 		}
 	}
 }
@@ -167,6 +170,8 @@ AudioProcessorValueTreeState::ParameterLayout SineDistortionAudioProcessor::crea
 
 	parameters.push_back(std::make_unique<AudioParameterFloat>("GAIN_SLIDER", "Gain slider", 0.0f, 50.0f, 1.0f));
 	parameters.push_back(std::make_unique<AudioParameterFloat>("WETDRY_SLIDER", "Wet Dry slider", 0.0f, 1.0f, 1.0f));
+
+parameters.push_back(std::make_unique<AudioParameterFloat>("OUTPUT_VOLUME_SLIDER", "Output Volume Slider", -60.0f, 0.0f, 1.0f));
 
 	return { parameters.begin(), parameters.end() };
 }

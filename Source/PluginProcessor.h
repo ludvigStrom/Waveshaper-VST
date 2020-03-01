@@ -41,6 +41,7 @@ public:
 private:
 	float gain;
 	float dryWet;
+    float outputVolume;
 	float temporarySound;
 	float originalSound;
 
