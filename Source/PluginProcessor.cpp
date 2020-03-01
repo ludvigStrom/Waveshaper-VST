@@ -1,223 +1,172 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-//==============================================================================
-SineDistAudioProcessor::SineDistAudioProcessor() :
+SineDistortionAudioProcessor::SineDistortionAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
-	AudioProcessor(BusesProperties()
+	: AudioProcessor(BusesProperties()
 #if ! JucePlugin_IsMidiEffect
 #if ! JucePlugin_IsSynth
 		.withInput("Input", AudioChannelSet::stereo(), true)
 #endif
 		.withOutput("Output", AudioChannelSet::stereo(), true)
 #endif
-	),
-#endif
-	treeState(*this, nullptr, "PARAMETERS", createParameterLayout())
-{
-}
-
-SineDistAudioProcessor::~SineDistAudioProcessor()
-{
-}
-
-//==============================================================================
-
-AudioProcessorValueTreeState::ParameterLayout SineDistAudioProcessor::createParameterLayout() 
-{
+	), apvts(*this, nullptr, "Parameters", createParameters())
 	
-	std::vector<std::unique_ptr<RangedAudioParameter>> params;
-
-	auto gainParam = std::make_unique<AudioParameterFloat>(GAIN_ID, GAIN_NAME, 0.0f, 50.0f, 25.0f);
-	auto wetdryParam = std::make_unique<AudioParameterFloat>(WETDRY_ID, WETDRY_NAME, 0.0f, 1.0f, 0.5f);
-
-	params.push_back(std::move(gainParam));
-	params.push_back(std::move(wetdryParam));
-
-	return { params.begin(), params.end() };
+#endif
+{
 
 }
 
-
-const String SineDistAudioProcessor::getName() const
-{
-    return JucePlugin_Name;
+SineDistortionAudioProcessor::~SineDistortionAudioProcessor() {
 }
 
-bool SineDistAudioProcessor::acceptsMidi() const
-{
-   #if JucePlugin_WantsMidiInput
-    return true;
-   #else
-    return false;
-   #endif
+const String SineDistortionAudioProcessor::getName() const {
+	return JucePlugin_Name;
 }
 
-bool SineDistAudioProcessor::producesMidi() const
-{
-   #if JucePlugin_ProducesMidiOutput
-    return true;
-   #else
-    return false;
-   #endif
+bool SineDistortionAudioProcessor::acceptsMidi() const {
+#if JucePlugin_WantsMidiInput
+	return true;
+#else
+	return false;
+#endif
 }
 
-bool SineDistAudioProcessor::isMidiEffect() const
-{
-   #if JucePlugin_IsMidiEffect
-    return true;
-   #else
-    return false;
-   #endif
+bool SineDistortionAudioProcessor::producesMidi() const {
+#if JucePlugin_ProducesMidiOutput
+	return true;
+#else
+	return false;
+#endif
 }
 
-double SineDistAudioProcessor::getTailLengthSeconds() const
-{
-    return 0.0;
+bool SineDistortionAudioProcessor::isMidiEffect() const {
+#if JucePlugin_IsMidiEffect
+	return true;
+#else
+	return false;
+#endif
 }
 
-int SineDistAudioProcessor::getNumPrograms()
-{
-    return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
-                // so this should be at least 1, even if you're not really implementing programs.
+double SineDistortionAudioProcessor::getTailLengthSeconds() const {
+	return 0.0;
 }
 
-int SineDistAudioProcessor::getCurrentProgram()
-{
-    return 0;
+int SineDistortionAudioProcessor::getNumPrograms() {
+	return 1;
 }
 
-void SineDistAudioProcessor::setCurrentProgram (int index)
-{
+int SineDistortionAudioProcessor::getCurrentProgram() {
+	return 0;
 }
 
-const String SineDistAudioProcessor::getProgramName (int index)
-{
-    return {};
+void SineDistortionAudioProcessor::setCurrentProgram(int index) {
 }
 
-void SineDistAudioProcessor::changeProgramName (int index, const String& newName)
-{
+const String SineDistortionAudioProcessor::getProgramName(int index) {
+	return {};
 }
 
-//==============================================================================
-void SineDistAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
-{
-	//init values using dereferenced raw parameter values.
-	gain = *treeState.getRawParameterValue(GAIN_ID);
-	dryWet = *treeState.getRawParameterValue(WETDRY_ID);
+void SineDistortionAudioProcessor::changeProgramName(int index, const String& newName) {
 }
 
-void SineDistAudioProcessor::releaseResources()
-{
-    // When playback stops, you can use this as an opportunity to free up any
-    // spare memory, etc.
+void SineDistortionAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
+	gain = *apvts.getRawParameterValue("GAIN_SLIDER");
+	dryWet = *apvts.getRawParameterValue("WETDRY_SLIDER");
+}
+
+void SineDistortionAudioProcessor::releaseResources() {
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool SineDistAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
-{
-  #if JucePlugin_IsMidiEffect
-    ignoreUnused (layouts);
-    return true;
-  #else
-    // This is the place where you check if the layout is supported.
-    // In this template code we only support mono or stereo.
-    if (layouts.getMainOutputChannelSet() != AudioChannelSet::mono()
-     && layouts.getMainOutputChannelSet() != AudioChannelSet::stereo())
-        return false;
+bool SineDistortionAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const {
+#if JucePlugin_IsMidiEffect
+	ignoreUnused(layouts);
+	return true;
+#else
+	if (layouts.getMainOutputChannelSet() != AudioChannelSet::mono()
+		&& layouts.getMainOutputChannelSet() != AudioChannelSet::stereo())
+		return false;
 
-    // This checks if the input layout matches the output layout
-   #if ! JucePlugin_IsSynth
-    if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
-        return false;
-   #endif
+#if ! JucePlugin_IsSynth
+	if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
+		return false;
+#endif
 
-    return true;
-  #endif
+	return true;
+#endif
 }
 #endif
 
-void SineDistAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
-{
-    ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
+void SineDistortionAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMessages) {
+	
+	ScopedNoDenormals noDenormals;
+	auto totalNumInputChannels = getTotalNumInputChannels();
+	auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
+	auto gains = *apvts.getRawParameterValue("GAIN_SLIDER");
+	auto dryWets = *apvts.getRawParameterValue("WETDRY_SLIDER");
 
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
+	for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+		buffer.clear(i, 0, buffer.getNumSamples());
 
-		for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
-		{
-			//read input from knobs. 
-			auto gains = *treeState.getRawParameterValue(GAIN_ID);
-			auto dryWets = *treeState.getRawParameterValue(WETDRY_ID);
+	for (int channel = 0; channel < totalNumInputChannels; ++channel) {
+		auto* channelData = buffer.getWritePointer(channel);
+
+		for (int sample = 0; sample < buffer.getNumSamples(); ++sample) {
 
 			//assign current sample to tmpSound;
-			tmpSound = buffer.getSample(channel, sample);
+			temporarySound = buffer.getSample(channel, sample);
 
 			//save original sound for dry wet mix;
-			orgSound = tmpSound;
+			originalSound = temporarySound;
 
 			//sinus waveshaper
-			tmpSound = std::sin(tmpSound * gains);
+			temporarySound = std::sin(temporarySound * gains);
 
 			//hardClip
-			tmpSound = std::tanh(tmpSound);
+			temporarySound = std::tanh(temporarySound);
 
 			//dry/wet
-			tmpSound = ((tmpSound * dryWets) + (orgSound * (1.f - dryWets)) / 2.f);
+			temporarySound = ((temporarySound * dryWets) + (originalSound * (1.f - dryWets)) / 2.f);
 
-			channelData[sample] = tmpSound ;
-		}
-    }
-}
-
-//==============================================================================
-bool SineDistAudioProcessor::hasEditor() const
-{
-    return true; // (change this to false if you choose to not supply an editor)
-}
-
-AudioProcessorEditor* SineDistAudioProcessor::createEditor()
-{
-    return new SineDistAudioProcessorEditor (*this);
-}
-
-//==============================================================================
-void SineDistAudioProcessor::getStateInformation (MemoryBlock& destData)
-{
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
-
-	ScopedPointer <XmlElement> xml(treeState.state.createXml());
-	copyXmlToBinary(*xml, destData);
-
-}
-
-void SineDistAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
-{
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
-	ScopedPointer <XmlElement> theParams(getXmlFromBinary(data, sizeInBytes));
-
-	if (theParams != nullptr) {
-		if (theParams->hasTagName(treeState.state.getType())) {
-			treeState.state = ValueTree::fromXml(*theParams);
+			channelData[sample] = temporarySound;
 		}
 	}
+}
+
+bool SineDistortionAudioProcessor::hasEditor() const {
+	return true;
+}
+
+AudioProcessorEditor* SineDistortionAudioProcessor::createEditor() {
+	return new SineDistortionAudioProcessorEditor(*this);
+}
+
+void SineDistortionAudioProcessor::getStateInformation(MemoryBlock& destData) {
+	auto state = apvts.copyState();
+    std::unique_ptr<XmlElement> xml (state.createXml());
+    copyXmlToBinary (*xml, destData);
 
 }
 
-//==============================================================================
-// This creates new instances of the plugin..
-AudioProcessor* JUCE_CALLTYPE createPluginFilter()
-{
-    //return new SineDistAudioProcessor(AudioProcessorValueTreeState);
-	return new SineDistAudioProcessor();
+void SineDistortionAudioProcessor::setStateInformation(const void* data, int sizeInBytes) {
+	std::unique_ptr<XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
+
+	if (xmlState.get() != nullptr)
+		if (xmlState->hasTagName(apvts.state.getType()))
+			apvts.replaceState(ValueTree::fromXml(*xmlState));
+}
+
+AudioProcessor* JUCE_CALLTYPE createPluginFilter() {
+	return new SineDistortionAudioProcessor();
+}
+
+AudioProcessorValueTreeState::ParameterLayout SineDistortionAudioProcessor::createParameters() {
+	std::vector<std::unique_ptr<RangedAudioParameter>> parameters;
+
+	parameters.push_back(std::make_unique<AudioParameterFloat>("GAIN_SLIDER", "Gain slider", 0.0f, 50.0f, 1.0f));
+	parameters.push_back(std::make_unique<AudioParameterFloat>("WETDRY_SLIDER", "Wet Dry slider", 0.0f, 1.0f, 1.0f));
+
+	return { parameters.begin(), parameters.end() };
 }

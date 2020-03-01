@@ -1,59 +1,46 @@
+
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-//==============================================================================
-SineDistAudioProcessorEditor::SineDistAudioProcessorEditor (SineDistAudioProcessor& p)
-    : AudioProcessorEditor (&p), processor (p)
-{
+SineDistortionAudioProcessorEditor::SineDistortionAudioProcessorEditor(SineDistortionAudioProcessor& p)
+	: AudioProcessorEditor(&p), processor(p) {
 
-	setSize (250, 250);
-	
-	gainAttach = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(processor.treeState, GAIN_ID, gainSlider);
+	setSize(250, 250);
+
 	gainSlider.setSliderStyle(Slider::SliderStyle::Rotary);
 	gainSlider.setTextBoxStyle(Slider::TextBoxBelow, true, 100, 25);
-	gainSlider.setRange(0.0, 50.0);
-	gainSlider.addListener(this);
+	gainSlider.setRange(0.0f, 50.0f, 0.1);
+	gainSlider.setValue(1.0f);
 	addAndMakeVisible(gainSlider);
 
-	wetAttach = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(processor.treeState, WETDRY_ID, dryWetSlider);
-	dryWetSlider.setSliderStyle(Slider::SliderStyle::Rotary);
-	dryWetSlider.setTextBoxStyle(Slider::TextBoxBelow, true, 100, 25);
-	dryWetSlider.setRange(0, 1);
-	dryWetSlider.addListener(this);
-	addAndMakeVisible(dryWetSlider);
+	gainSliderAttachment =
+		std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(
+			processor.apvts, "GAIN_SLIDER", gainSlider);
 
+
+	wetDrySlider.setSliderStyle(Slider::SliderStyle::Rotary);
+	wetDrySlider.setTextBoxStyle(Slider::TextBoxBelow, true, 100, 25);
+	wetDrySlider.setRange(0.0f, 1.0f, 0.1);
+	wetDrySlider.setValue(0.0f);
+	addAndMakeVisible(wetDrySlider);
+
+	wetDrySliderAttachment =
+		std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(
+			processor.apvts, "WETDRY_SLIDER", wetDrySlider);
 }
 
-SineDistAudioProcessorEditor::~SineDistAudioProcessorEditor()
-{	
+SineDistortionAudioProcessorEditor::~SineDistortionAudioProcessorEditor() {
 }
 
-//==============================================================================
-void SineDistAudioProcessorEditor::paint (Graphics& g)
-{
+void SineDistortionAudioProcessorEditor::paint(Graphics& g) {
+
 	g.fillAll(getLookAndFeel().findColour(ResizableWindow::backgroundColourId));
 }
 
-void SineDistAudioProcessorEditor::resized()
-{
+void SineDistortionAudioProcessorEditor::resized() {
 	Rectangle<int> area = getLocalBounds();
 	area.reduce(15, 15);
 
 	gainSlider.setBounds(area.removeFromLeft(area.getWidth() / 2));
-	dryWetSlider.setBounds(area);
-}
-
-void SineDistAudioProcessorEditor::sliderValueChanged(Slider *slider)
-{
-	if (slider == &gainSlider)
-	{
-		processor.knobGain.setValue(gainSlider.getValue());
-	}
-
-	if (slider == &dryWetSlider)
-	{
-		processor.knobDryWet.setValue(
-			Decibels::decibelsToGain(dryWetSlider.getValue())			
-		);
-	}
+	wetDrySlider.setBounds(area);
 }

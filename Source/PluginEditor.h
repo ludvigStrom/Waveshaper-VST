@@ -3,33 +3,22 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "PluginProcessor.h"
 
-//==============================================================================
-/**
-*/
-class SineDistAudioProcessorEditor  : public AudioProcessorEditor,
-										  public Slider::Listener
-{
+class SineDistortionAudioProcessorEditor : public AudioProcessorEditor {
 public:
-    SineDistAudioProcessorEditor (SineDistAudioProcessor&);
-    ~SineDistAudioProcessorEditor();
+	SineDistortionAudioProcessorEditor(SineDistortionAudioProcessor&);
+	~SineDistortionAudioProcessorEditor();
 
-    //==============================================================================
-    void paint (Graphics&) override;
-    void resized() override;
-	void sliderValueChanged(Slider *slider) override;
+	void paint(Graphics&) override;
+	void resized() override;
 
 private:
-    // This reference is provided as a quick way for your editor to
-    // access the processor object that created it.
-    SineDistAudioProcessor& processor;
-
 	Slider gainSlider;
-	Slider dryWetSlider;
+	Slider wetDrySlider;
 
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> gainSliderAttachment;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> wetDrySliderAttachment;
 
-public:
-	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> gainAttach;
-	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> wetAttach;
+	SineDistortionAudioProcessor& processor;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SineDistAudioProcessorEditor)
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SineDistortionAudioProcessorEditor)
 };
