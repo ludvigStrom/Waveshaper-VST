@@ -106,8 +106,16 @@ void SineDistortionAudioProcessor::processBlock(AudioBuffer<float>& buffer, Midi
 	auto totalNumOutputChannels = getTotalNumOutputChannels();
 
 	float gains = *apvts.getRawParameterValue("GAIN_SLIDER");
+	SmoothedValue<float, ValueSmoothingTypes::Linear> gainsSmoothed;
+	gainsSmoothed.setTargetValue(gains);
+
 	float dryWets = *apvts.getRawParameterValue("WETDRY_SLIDER");
+	SmoothedValue<float, ValueSmoothingTypes::Linear> dryWetsSmoothed;
+	dryWetsSmoothed.setTargetValue(dryWets);
+
     float outputVolume = *apvts.getRawParameterValue("OUTPUT_VOLUME_SLIDER");
+	SmoothedValue<float, ValueSmoothingTypes::Linear> outputVolumeSmoothed;
+	outputVolumeSmoothed.setTargetValue(outputVolume);
 
 	for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
 		buffer.clear(i, 0, buffer.getNumSamples());
@@ -116,6 +124,9 @@ void SineDistortionAudioProcessor::processBlock(AudioBuffer<float>& buffer, Midi
 		auto* channelData = buffer.getWritePointer(channel);
 
 		for (int sample = 0; sample < buffer.getNumSamples(); ++sample) {
+			gains = gainsSmoothed.getNextValue();
+			dryWets = dryWetsSmoothed.getNextValue();
+			outputVolume = outputVolumeSmoothed.getNextValue();
 
 			//assign current sample to tmpSound;
 			temporarySound = buffer.getSample(channel, sample);
@@ -126,13 +137,13 @@ void SineDistortionAudioProcessor::processBlock(AudioBuffer<float>& buffer, Midi
 			//sinus waveshaper
 			temporarySound = std::sin(temporarySound * gains);
 
-			//hardClip
+			//hard clip
 			temporarySound = std::tanh(temporarySound);
 
 			//dry/wet
 			temporarySound = ((temporarySound * dryWets) + (originalSound * (1.f - dryWets)) / 2.f);
 
-            //Apply output volume
+            //apply output volume
 			channelData[sample] = temporarySound * Decibels::decibelsToGain(outputVolume);
 		}
 	}
@@ -170,8 +181,7 @@ AudioProcessorValueTreeState::ParameterLayout SineDistortionAudioProcessor::crea
 
 	parameters.push_back(std::make_unique<AudioParameterFloat>("GAIN_SLIDER", "Gain slider", 0.0f, 50.0f, 1.0f));
 	parameters.push_back(std::make_unique<AudioParameterFloat>("WETDRY_SLIDER", "Wet Dry slider", 0.0f, 1.0f, 1.0f));
-
-parameters.push_back(std::make_unique<AudioParameterFloat>("OUTPUT_VOLUME_SLIDER", "Output Volume Slider", -60.0f, 0.0f, 1.0f));
+	parameters.push_back(std::make_unique<AudioParameterFloat>("OUTPUT_VOLUME_SLIDER", "Output Volume Slider", -60.0f, 0.0f, 1.0f));
 
 	return { parameters.begin(), parameters.end() };
 }
