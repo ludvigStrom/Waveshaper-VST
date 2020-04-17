@@ -150,7 +150,6 @@ void SineDistortionAudioProcessor::getStateInformation(MemoryBlock& destData) {
 	auto state = apvts.copyState();
     std::unique_ptr<XmlElement> xml (state.createXml());
     copyXmlToBinary (*xml, destData);
-
 }
 
 void SineDistortionAudioProcessor::setStateInformation(const void* data, int sizeInBytes) {
@@ -170,8 +169,7 @@ AudioProcessorValueTreeState::ParameterLayout SineDistortionAudioProcessor::crea
 
 	parameters.push_back(std::make_unique<AudioParameterFloat>("GAIN_SLIDER", "Gain slider", 0.0f, 50.0f, 1.0f));
 	parameters.push_back(std::make_unique<AudioParameterFloat>("WETDRY_SLIDER", "Wet Dry slider", 0.0f, 1.0f, 1.0f));
-
-parameters.push_back(std::make_unique<AudioParameterFloat>("OUTPUT_VOLUME_SLIDER", "Output Volume Slider", -60.0f, 0.0f, 1.0f));
+    parameters.push_back(std::make_unique<AudioParameterFloat>("OUTPUT_VOLUME_SLIDER", "Output Volume Slider", -60.0f, 0.0f, 1.0f));
 
 	return { parameters.begin(), parameters.end() };
 }
